@@ -30,6 +30,8 @@ mod cli {
         #[arg(long)]
         pub scope: Option<String>,
         pub file_path: PathBuf,
+        #[arg(long, short)]
+        pub debug_query: bool,
     }
 
     impl Cli {
@@ -47,7 +49,38 @@ fn print_file_items(args: &Arguments) -> Result<()> {
     };
     let query = load_language_query(name, language)?;
     let (tree, text) = parse_file(language, args.file_path.as_path())?;
-    println!("{:#?}", tree);
+
+    if args.debug_query {
+        println!("{:#?}", tree);
+    }
+
+    enum CaptureFn<'a> {
+        Push,
+        Pop,
+        Name { prefix: &'a str },
+        Nop,
+    }
+
+    let mut indent = String::new();
+    let mut max_capture_name_len = 0;
+    let mut caputure_action = Vec::new();
+
+    for name in query.capture_names() {
+        if name.ends_with(".begin") {
+            caputure_action.push(CaptureFn::Push);
+        } else if name.ends_with(".end") {
+            caputure_action.push(CaptureFn::Pop);
+        } else if name.ends_with(".name") {
+            caputure_action.push(CaptureFn::Name {
+                prefix: name.as_str().get(..name.len() - 5).unwrap(),
+            });
+        } else {
+            caputure_action.push(CaptureFn::Nop);
+        }
+        if name.len() + 1 > max_capture_name_len {
+            max_capture_name_len = name.len() + 1;
+        }
+    }
 
     let mut cursor = QueryCursor::new();
     for (m, capture_index) in cursor.captures(&query, tree.root_node(), text.as_slice()) {
@@ -56,14 +89,25 @@ fn print_file_items(args: &Arguments) -> Result<()> {
         let capture_name = &query.capture_names()[capture_index as usize];
         let capture_text = capture.node.utf8_text(&text).unwrap_or("");
 
-        println!(
-            "<Query match id: {m_id
-            }, index: {pattern_index}:{capture_index:<2
-            }, capture: {capture_name:20
-            }, text: \"{capture_text
-            }\">",
-            m_id = m.id(),
-        );
+        if args.debug_query {
+            println!(
+                "{{Query match id: {m_id
+                }, index: {pattern_index}:{capture_index:<2
+                }, capture: {capture_name:max_capture_name_len$
+                }, text: \"{capture_text
+                }\"}}",
+                m_id = m.id(),
+            );
+        } else {
+            match &caputure_action[capture_index] {
+                CaptureFn::Push => indent.push_str("  "),
+                CaptureFn::Pop => indent.truncate(indent.len().saturating_sub(2)),
+                CaptureFn::Name { prefix } => {
+                    println!("{indent}{prefix} {capture_text}");
+                }
+                CaptureFn::Nop => {}
+            }
+        }
     }
 
     Ok(())
