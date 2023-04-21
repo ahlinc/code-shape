@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use cli::{Arguments, Cli};
 use std::{
     fs,
@@ -166,7 +166,7 @@ fn language_name_from_config(lanuguage_config: &LanguageConfiguration) -> Result
 fn parse_file(language: Language, path: &Path) -> Result<(Tree, Vec<u8>)> {
     let mut parser = Parser::new();
     parser.set_language(unsafe { std::mem::transmute(language) })?;
-    let text = fs::read(path)?;
+    let text = fs::read(path).with_context(|| format!("Can't read input file: {path:?}"))?;
     let tree = parser.parse(&text, None).expect("Can't parse the file");
     Ok((tree, text))
 }
@@ -184,7 +184,11 @@ fn language_queries_dir() -> Result<PathBuf> {
 
 fn load_language_query(name: LanguageName, language: Language) -> Result<Query> {
     let dir = language_queries_dir()?;
-    let mut query_path = dir.join(name);
+    let mut query_path = dir.join(&name);
     query_path.set_extension("scm");
-    Ok(Query::new(language, &fs::read_to_string(query_path)?)?)
+    Ok(Query::new(
+        language,
+        &fs::read_to_string(query_path)
+            .with_context(|| format!("Can't load query for '{name}' language"))?,
+    )?)
 }
