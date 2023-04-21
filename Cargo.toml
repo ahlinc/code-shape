@@ -2,6 +2,12 @@
 name = "code-shape"
 version = "0.1.0"
 edition = "2021"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ahlinc/code-shape"
+documentation = "https://github.com/ahlinc/code-shape"
+description = "Code-shape is a tool for extracting definitions from source code files"
+keywords = ["tree-sitter", "tool", "source", "code"]
 
 [dependencies]
 anyhow = "1.0.70"
