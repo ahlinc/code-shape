@@ -32,39 +32,39 @@ To start using the tool it's needed to do some preparation.
 To make it possible to extract a shape of definitions from some source code file for some language, it's needed to define a [query]. To define a new query create a file in a Code-shape's languages [config dir] `~/.config/code-shape/languages/` with an `.scm` suffix like `~/.config/code-shape/languages/c.scm` and put there a set of Tree-sitter [query] patterns like:
 
 ```scheme
-; C language function definitions & declarations
-[
-    (declaration
-        [
-            (function_declarator
-                declarator: (identifier) @fn.name
-            )
-            (init_declarator
-                (_
-                    (function_declarator
-                        (_ (_ declarator: (identifier) @fn.name))
-                    )
-                )
-            )
-        ]
-    )
-    (function_definition
-        [
-            (function_declarator
-                declarator: (identifier) @fn.name
-            )
+; C language function declarations
+(declaration
+    [
+        (function_declarator
+            declarator: (identifier) @fn.name
+        )
+        (init_declarator
             (_
                 (function_declarator
-                    declarator: (identifier) @fn.name
+                    (_ (_ declarator: (identifier) @fn.name))
                 )
             )
-        ]
-        body: (_
-            "{" @fn.begin
-            "}" @fn.end
         )
+    ]
+)
+
+; C language function definitions
+(function_definition
+    [
+        (function_declarator
+            declarator: (identifier) @fn.name
+        )
+        (_
+            (function_declarator
+                declarator: (identifier) @fn.name
+            )
+        )
+    ]
+    body: (_
+        "{" @fn.begin
+        "}" @fn.end
     )
-]
+)
 ```
 
 It's needed to define captures with special names:
