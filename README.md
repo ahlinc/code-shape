@@ -1,5 +1,10 @@
 # Code-shape
 
+[![crates.io badge]][crates.io]
+
+[crates.io]: https://crates.io/crates/code-shape
+[crates.io badge]: https://img.shields.io/crates/v/code-shape.svg?color=%23B48723
+
 Code-shape is a tool that uses [Tree-sitter] to extract a shape of code definitions from a source code file.
 The tool uses the same language parsers that are installed for [Tree-sitter CLI][tree-sitter-cli].
 
@@ -82,12 +87,13 @@ fn ts_set_allocator
 
 ## Embedded shape queries
 
-For now the tool has builtin shape queries for the following language parsers:
+For now the tool has [builtin][builtin queries] shape queries for the following language parsers:
 
 * [C](https://github.com/tree-sitter/tree-sitter-c)
 
 [Tree-sitter]: https://github.com/tree-sitter/tree-sitter
 [tree-sitter-cli]: https://crates.io/crates/tree-sitter-cli
 [tree-sitter parsers]: https://tree-sitter.github.io/tree-sitter/#parsers
+[builtin queries]: https://github.com/ahlinc/code-shape/tree/main/queries/languages
 [config dir]: https://docs.rs/dirs/latest/dirs/fn.config_dir.html
 [query]: https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries
