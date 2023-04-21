@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use cli::{Arguments, Cli};
 use rust_embed::RustEmbed;
 use std::{
+    cmp::max,
     fs,
     path::{Path, PathBuf},
 };
@@ -51,10 +52,6 @@ fn print_file_items(args: &Arguments) -> Result<()> {
     let query = load_language_query(name, language)?;
     let (tree, text) = parse_file(language, args.file_path.as_path())?;
 
-    if args.debug_query {
-        println!("{:#?}", tree);
-    }
-
     enum CaptureFn<'a> {
         Push,
         Pop,
@@ -78,10 +75,13 @@ fn print_file_items(args: &Arguments) -> Result<()> {
         } else {
             caputure_action.push(CaptureFn::Nop);
         }
-        if name.len() + 1 > max_capture_name_len {
-            max_capture_name_len = name.len() + 1;
+        if name.len() > max_capture_name_len {
+            max_capture_name_len = name.len();
         }
     }
+
+    let pattern_index_pad = pad(query.pattern_count());
+    let capture_index_pad = max(pad(query.capture_names().len()), 2);
 
     let mut cursor = QueryCursor::new();
     for (m, capture_index) in cursor.captures(&query, tree.root_node(), text.as_slice()) {
@@ -92,11 +92,10 @@ fn print_file_items(args: &Arguments) -> Result<()> {
 
         if args.debug_query {
             println!(
-                "{{Query match id: {m_id
-                }, index: {pattern_index}:{capture_index:<2
+                "Query match id: {m_id:<2
+                }, index: {pattern_index:pattern_index_pad$}:{capture_index:<capture_index_pad$
                 }, capture: {capture_name:max_capture_name_len$
-                }, text: \"{capture_text
-                }\"}}",
+                }, text: \"{capture_text}\"",
                 m_id = m.id(),
             );
         } else {
@@ -196,4 +195,8 @@ fn load_language_query(name: LanguageName, language: Language) -> Result<Query> 
         }
     }
     Ok(Query::new(language, query_text.unwrap().as_str())?)
+}
+
+fn pad(n: usize) -> usize {
+    format!("{n}").len()
 }
