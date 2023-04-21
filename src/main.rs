@@ -138,18 +138,12 @@ fn load_language_for_scope(scope: &str) -> Result<(Language, LanguageName)> {
 }
 
 fn language_name_from_config(lanuguage_config: &LanguageConfiguration) -> Result<String> {
-    // println!(
-    //     "LC: {:?}, {:?}",
-    //     lanuguage_config.scope, lanuguage_config.root_path
-    // );
     lanuguage_config
         .scope
         .clone()
         .map(|scope| {
-            // println!("scope: {scope}");
             scope
                 .strip_prefix("source.")
-                // .map_or(scope.clone(), |s| s.to_owned())
                 .map(|s| s.to_owned())
                 .unwrap_or(scope)
         })
