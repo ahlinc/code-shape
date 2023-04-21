@@ -18,7 +18,7 @@ cargo install code-shape
 
 ## Usage
 
-To start using to tool it's needed to do some preparation.
+To start using the tool it's needed to do some preparation.
 
 ### Prerequsites
 
