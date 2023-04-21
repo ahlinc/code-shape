@@ -7,6 +7,7 @@ edition = "2021"
 anyhow = "1.0.70"
 clap = { version = "4.2.4", features = ["cargo", "derive", "env", "string", "unicode", "wrap_help"] }
 dirs = "5.0.0"
+rust-embed = "6.6.1"
 tree-sitter = "0.20.10"
 tree-sitter-config = "0.19.0"
 tree-sitter-loader = "0.20.0"

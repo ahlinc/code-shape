@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use cli::{Arguments, Cli};
+use rust_embed::RustEmbed;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -176,13 +177,23 @@ fn language_queries_dir() -> Result<PathBuf> {
     Ok(xdg_config_dir()?.join("languages"))
 }
 
+#[derive(RustEmbed)]
+#[folder = "queries/languages"]
+struct EmbeddedLanguages;
+
 fn load_language_query(name: LanguageName, language: Language) -> Result<Query> {
     let dir = language_queries_dir()?;
     let mut query_path = dir.join(&name);
     query_path.set_extension("scm");
-    Ok(Query::new(
-        language,
-        &fs::read_to_string(query_path)
-            .with_context(|| format!("Can't load query for '{name}' language"))?,
-    )?)
+    let mut query_text = fs::read_to_string(query_path)
+        .with_context(|| format!("Can't load query for '{name}' language"));
+    if query_text.is_err() {
+        let embedded_query = EmbeddedLanguages::get(format!("{name}.scm").as_str());
+        if let Some(embedded_file) = embedded_query {
+            query_text = Ok(std::str::from_utf8(&embedded_file.data).unwrap().to_owned());
+        } else {
+            return Err(query_text.unwrap_err());
+        }
+    }
+    Ok(Query::new(language, query_text.unwrap().as_str())?)
 }
