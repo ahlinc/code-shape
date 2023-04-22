@@ -9,6 +9,9 @@ documentation = "https://github.com/ahlinc/code-shape"
 description = "Code-shape is a tool for extracting definitions from source code files"
 keywords = ["tree-sitter", "tool", "source", "code"]
 
+[profile.release]
+strip = true
+
 [dependencies]
 anyhow = "1.0.70"
 clap = { version = "4.2.4", features = ["cargo", "derive", "env", "string", "unicode", "wrap_help"] }
