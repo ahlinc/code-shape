@@ -2,12 +2,28 @@
 (declaration
     [
         (function_declarator
-            declarator: (identifier) @fn.name
+            declarator: (identifier) @fn.declaration.name
+        )
+        (_
+            (function_declarator
+                declarator: (identifier) @fn.declaration.name
+            )
+        )
+    ]
+)
+
+; C language function pointer declarations
+(declaration
+    [
+        (init_declarator
+            (function_declarator
+                (_ (_ declarator: (identifier) @fn.pointer.declaration.name))
+            )
         )
         (init_declarator
             (_
                 (function_declarator
-                    (_ (_ declarator: (identifier) @fn.name))
+                    (_ (_ declarator: (identifier) @fn.pointer.declaration.name))
                 )
             )
         )
