@@ -36,12 +36,28 @@ To make it possible to extract a shape of definitions from some source code file
 (declaration
     [
         (function_declarator
-            declarator: (identifier) @fn.name
+            declarator: (identifier) @fn.declaration.name
+        )
+        (_
+            (function_declarator
+                declarator: (identifier) @fn.declaration.name
+            )
+        )
+    ]
+)
+
+; C language function pointer declarations
+(declaration
+    [
+        (init_declarator
+            (function_declarator
+                (_ (_ declarator: (identifier) @fn.pointer.declaration.name))
+            )
         )
         (init_declarator
             (_
                 (function_declarator
-                    (_ (_ declarator: (identifier) @fn.name))
+                    (_ (_ declarator: (identifier) @fn.pointer.declaration.name))
                 )
             )
         )
@@ -62,24 +78,53 @@ To make it possible to extract a shape of definitions from some source code file
     ]
     body: (_) @fn.scope
 )
+
 ```
 
 It's needed to define captures with special names:
 
 * `<type>.name` is a capture where the `type` may be, e.g., `fn`, `class` or anything else to match a code entity name.
-* `<type>.scope` is a special capture that allow for the tool to capture a context of entities and usually are tokens that defines a body of the the entity, e.g., a _function body_.
+* `<type>.scope` is a special capture that allows for the tool to capture a context of entities and usually are tokens that defines a body of the the entity, e.g., a _function body_.
 
-An example of the tool output:
+Examples of the tool output:
 
 ```sh
 # code-shape --scope source.c tree-sitter/lib/src/alloc.c
 fn ts_malloc_default
 fn ts_calloc_default
 fn ts_realloc_default
-fn ts_current_malloc
-fn ts_current_calloc
-fn ts_current_realloc
+fn.pointer.declaration ts_current_malloc
+fn.pointer.declaration ts_current_calloc
+fn.pointer.declaration ts_current_realloc
+fn.pointer.declaration ts_current_free
 fn ts_set_allocator
+
+# code-shape examples/foo.c
+fn.declaration ts_malloc_default
+fn.declaration ts_calloc_default
+fn.declaration ts_realloc_default
+fn.pointer.declaration ts_current_malloc
+fn.pointer.declaration ts_current_calloc
+fn.pointer.declaration ts_current_realloc
+fn.pointer.declaration ts_current_free
+fn foo
+fn bar
+
+# code-shape examples/foo.py
+class Foo
+  def foo
+  def bar
+    def inner
+def one
+def two
+def wrap
+  class Baz
+    class Bar
+      class Foo
+        def func1
+          def func2
+  def three
+def four
 ```
 
 ## Embedded shape queries
@@ -87,6 +132,7 @@ fn ts_set_allocator
 For now the tool has [builtin][builtin queries] shape queries for the following language parsers:
 
 * [C](https://github.com/tree-sitter/tree-sitter-c)
+* [Python](https://github.com/tree-sitter/tree-sitter-python)
 
 [Tree-sitter]: https://github.com/tree-sitter/tree-sitter
 [tree-sitter-cli]: https://crates.io/crates/tree-sitter-cli
