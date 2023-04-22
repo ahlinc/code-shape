@@ -53,21 +53,19 @@ fn print_file_items(args: &Arguments) -> Result<()> {
     let (tree, text) = parse_file(language, args.file_path.as_path())?;
 
     enum CaptureFn<'a> {
-        Push,
-        Pop,
+        Scope,
         Name { prefix: &'a str },
         Nop,
     }
 
+    let mut contexts = Vec::new();
     let mut indent = String::new();
     let mut max_capture_name_len = 0;
     let mut caputure_action = Vec::new();
 
     for name in query.capture_names() {
-        if name.ends_with(".begin") {
-            caputure_action.push(CaptureFn::Push);
-        } else if name.ends_with(".end") {
-            caputure_action.push(CaptureFn::Pop);
+        if name.ends_with(".scope") {
+            caputure_action.push(CaptureFn::Scope);
         } else if name.ends_with(".name") {
             caputure_action.push(CaptureFn::Name {
                 prefix: name.as_str().get(..name.len() - 5).unwrap(),
@@ -75,8 +73,8 @@ fn print_file_items(args: &Arguments) -> Result<()> {
         } else {
             caputure_action.push(CaptureFn::Nop);
         }
-        if name.len() > max_capture_name_len {
-            max_capture_name_len = name.len();
+        if name.len() + 1 > max_capture_name_len {
+            max_capture_name_len = name.len() + 1;
         }
     }
 
@@ -84,25 +82,68 @@ fn print_file_items(args: &Arguments) -> Result<()> {
     let capture_index_pad = max(pad(query.capture_names().len()), 2);
 
     let mut cursor = QueryCursor::new();
-    for (m, capture_index) in cursor.captures(&query, tree.root_node(), text.as_slice()) {
+    for (m, pattern_capture_index) in cursor.captures(&query, tree.root_node(), text.as_slice()) {
         let pattern_index = m.pattern_index;
-        let capture = m.captures[capture_index];
+        let capture = m.captures[pattern_capture_index];
+        let capture_index = capture.index;
         let capture_name = &query.capture_names()[capture_index as usize];
         let capture_text = capture.node.utf8_text(&text).unwrap_or("");
 
         if args.debug_query {
-            println!(
-                "Query match id: {m_id:<2
-                }, index: {pattern_index:pattern_index_pad$}:{capture_index:<capture_index_pad$
-                }, capture: {capture_name:max_capture_name_len$
-                }, text: \"{capture_text}\"",
-                m_id = m.id(),
-            );
+            let range = capture.node.range();
+            let sc = range.start_point.column;
+            let sr = range.start_point.row;
+            let ec = range.end_point.column;
+            let er = range.end_point.row;
+            let range = format!("{sr}:{sc}-{er}:{ec}");
+
+            match &caputure_action[capture_index as usize] {
+                CaptureFn::Scope => {
+                    println!(
+                        "Query match id: {m_id:<2
+                        }, index: {pattern_index:pattern_index_pad$}:{capture_index:<capture_index_pad$
+                        }, range: {range:<12
+                        }, capture: {capture_name:max_capture_name_len$}",
+                        m_id = m.id(),
+                    );
+                }
+                CaptureFn::Name { prefix: _ } => {
+                    println!(
+                        "Query match id: {m_id:<2
+                        }, index: {pattern_index:pattern_index_pad$}:{capture_index:<capture_index_pad$
+                        }, range: {range:<12
+                        }, capture: {capture_name:max_capture_name_len$
+                        }, text: \"{capture_text}\"",
+                        m_id = m.id(),
+                    );
+                }
+                CaptureFn::Nop => {}
+            }
         } else {
-            match &caputure_action[capture_index] {
-                CaptureFn::Push => indent.push_str("  "),
-                CaptureFn::Pop => indent.truncate(indent.len().saturating_sub(2)),
+            match &caputure_action[capture_index as usize] {
+                CaptureFn::Scope => {
+                    contexts.push(capture.node.range());
+                    indent.push_str("  ");
+                }
                 CaptureFn::Name { prefix } => {
+                    let node_range = capture.node.range();
+                    while !contexts.is_empty() {
+                        let mut exit_context = false;
+                        {
+                            let scope_range = contexts.last_mut().unwrap();
+                            if node_range.start_point >= scope_range.start_point {
+                                if node_range.start_point >= scope_range.end_point {
+                                    exit_context = true;
+                                }
+                            }
+                        }
+                        if exit_context {
+                            contexts.pop();
+                            indent.truncate(indent.len().saturating_sub(2));
+                        } else {
+                            break;
+                        }
+                    }
                     println!("{indent}{prefix} {capture_text}");
                 }
                 CaptureFn::Nop => {}

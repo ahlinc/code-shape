@@ -26,8 +26,5 @@
             )
         )
     ]
-    body: (_
-        "{" @fn.begin
-        "}" @fn.end
-    )
+    body: (_) @fn.scope
 )

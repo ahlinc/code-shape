@@ -60,17 +60,14 @@ To make it possible to extract a shape of definitions from some source code file
             )
         )
     ]
-    body: (_
-        "{" @fn.begin
-        "}" @fn.end
-    )
+    body: (_) @fn.scope
 )
 ```
 
 It's needed to define captures with special names:
 
 * `<type>.name` is a capture where the `type` may be, e.g., `fn`, `class` or anything else to match a code entity name.
-* `<type>.begin` and `<type>.end` are special captures that allow for the tool to capture a context of entities and usually are tokens that defines a body of the the entity, e.g., a _function body_.
+* `<type>.scope` is a special capture that allow for the tool to capture a context of entities and usually are tokens that defines a body of the the entity, e.g., a _function body_.
 
 An example of the tool output:
 
