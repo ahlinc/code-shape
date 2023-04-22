@@ -132,6 +132,7 @@ def four
 For now the tool has [builtin][builtin queries] shape queries for the following language parsers:
 
 * [C](https://github.com/tree-sitter/tree-sitter-c)
+* [C++](https://github.com/tree-sitter/tree-sitter-cpp)
 * [Python](https://github.com/tree-sitter/tree-sitter-python)
 
 [Tree-sitter]: https://github.com/tree-sitter/tree-sitter
