@@ -3,7 +3,7 @@
 [![crates.io badge]][crates.io]
 
 [crates.io]: https://crates.io/crates/code-shape
-[crates.io badge]: https://img.shields.io/crates/v/code-shape.svg?color=%23B48723
+[crates.io badge]: https://img.shields.io/crates/v/code-shape.svg?color=%23f1c941
 
 Code-shape is a tool that uses [Tree-sitter] to extract a shape of code definitions from a source code file.
 The tool uses the same language parsers that are installed for [Tree-sitter CLI][tree-sitter-cli].
